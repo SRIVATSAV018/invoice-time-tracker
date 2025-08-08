@@ -69,7 +69,15 @@ Kopiere dir die `.env.example` in den gleichen Ordner und bennene die Datei um z
 cp .env.example .env
 ```
 
-### 5. Datenbank & Tabellen erstellen
+### 5. Application-Key generieren
+
+Laravel benötigt einen Application-Key, welcher unter anderem für das Encrypten von Werten nötig ist. Diesen Application-Key kannst du mit dem folgenden Befehl generieren:
+
+```shell
+php artisan key:generate
+```
+
+### 6. Datenbank & Tabellen erstellen
 
 Du kannst **SQLite** verwenden, wenn du dir das Erstellen von einer separaten Datenbank sparen möchtest. SQLite ist standardmäßig in der .env hinterlegt. Du musst hier somit keine weiteren Änderungen an der `.env` durchführen.
 
@@ -77,7 +85,7 @@ Du kannst **SQLite** verwenden, wenn du dir das Erstellen von einer separaten Da
 php artisan migrate
 ```
 
-### 6. Benutzer erstellen
+### 7. Benutzer erstellen
 
 Nun kannst du deinen Benutzer erstellen. Dafür wurde ein eigenständiger Befehl implementiert, welcher dir die Arbeit abnimmt. 
 
@@ -87,7 +95,7 @@ php artisan make:user
 
 Dir werden insgesamt drei Fragen gestellt. Du gibst deinen Namen, deine E-Mail Adresse und dein gewünschtes Passwort an. Der Befehl kümmert sich dann um die Erstellung deines Accounts und gibt dir eine entsprechende Rückmeldung, ob die Erstellung erfolgreich war, oder fehlgeschlagen ist. 
 
-### 7. Applikation starten
+### 8. Applikation starten
 
 Starte nun die Applikation mit dem Laravel-Built-In Befehl. Die Applikation sollte dann unter `http://127.0.0.1:8000` erreichbar sein. 
 
