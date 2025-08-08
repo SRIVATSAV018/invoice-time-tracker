@@ -9,18 +9,19 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Gate;
 use App\Jobs\GenerateInvoiceJob;
 use App\Notifications\SendInvoiceToClientNotification;
+use Illuminate\Support\Facades\Storage;
 use function Pest\Laravel\{actingAs, get, post, put, delete};
 
 // Simulate policies for Invoice: allow if invoice's client belongs to user
-beforeEach(function () {
-    Gate::define('viewAny', fn(User $user, $model) => true);
-    Gate::define('view', fn(User $user, Invoice $invoice) => $invoice->client->user_id === $user->id);
-    Gate::define('create', fn(User $user, $model) => true);
-    Gate::define('update', fn(User $user, Invoice $invoice) => $invoice->client->user_id === $user->id);
-    Gate::define('delete', fn(User $user, Invoice $invoice) => $invoice->client->user_id === $user->id);
-    Gate::define('preview', fn(User $user, Invoice $invoice) => $invoice->client->user_id === $user->id);
-    Gate::define('sendToClient', fn(User $user, Invoice $invoice) => $invoice->client->user_id === $user->id);
-});
+//beforeEach(function () {
+//    Gate::define('viewAny', fn(User $user, $model) => true);
+//    Gate::define('view', fn(User $user, Invoice $invoice) => $invoice->client->user_id === $user->id);
+//    Gate::define('create', fn(User $user, $model) => true);
+//    Gate::define('update', fn(User $user, Invoice $invoice) => $invoice->client->user_id === $user->id);
+//    Gate::define('delete', fn(User $user, Invoice $invoice) => $invoice->client->user_id === $user->id);
+//    Gate::define('preview', fn(User $user, Invoice $invoice) => $invoice->client->user_id === $user->id);
+//    Gate::define('sendToClient', fn(User $user, Invoice $invoice) => $invoice->client->user_id === $user->id);
+//});
 
 it('redirects guests from invoice routes', function () {
     $invoice = Invoice::factory()->create();
@@ -221,6 +222,10 @@ it('forbids previewing an invoice not owned by the user', function () {
 
 it('sends an invoice to client immediately if date is not provided', function () {
     Notification::fake();
+    Storage::fake('locale');
+
+    Storage::disk('local')->put('invoice-preview.pdf', '');
+
     $user = User::factory()->create(['email_verified_at' => now()]);
     $client = Client::factory()->for($user)->create(['email' => 'client@example.com']);
     $invoice = Invoice::factory()->for($client)->create(['email_send_scheduled_at' => null, 'pdf_path' => 'invoice-preview.pdf']);
@@ -237,6 +242,9 @@ it('sends an invoice to client immediately if date is not provided', function ()
 
 it('schedules an invoice email when a future date is provided', function () {
     Notification::fake();
+    Storage::fake('locale');
+    Storage::disk('local')->put('invoice-preview.pdf', '');
+
     $user = User::factory()->create(['email_verified_at' => now()]);
     $client = Client::factory()->for($user)->create(['email' => 'client2@example.com']);
     $invoice = Invoice::factory()->for($client)->create(['email_send_scheduled_at' => null, 'pdf_path' => 'invoice-preview.pdf']);
