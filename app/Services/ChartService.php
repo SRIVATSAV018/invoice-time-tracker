@@ -2,15 +2,12 @@
 
 namespace App\Services;
 
-use App\DataTransferObjects\IncomeStatisticsDTO;
-use App\Models\Client;
-use App\Models\Invoice;
-use App\Models\TimeEntry;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class ChartService
 {
@@ -21,8 +18,15 @@ class ChartService
             Carbon::parse($end);
 
             $data = Cache::remember("chart.new_clients.{$start}_{$end}", 3600, function () use ($start, $end) {
-                return auth()->user()->clients()
-                    ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS client_count")
+                $query = auth()->user()->clients();
+
+                if (DB::getDriverName() === 'sqlite') {
+                    $query->selectRaw("strftime('%Y-%m-%d', created_at) as date, COUNT(*) as client_count");
+                } else {
+                    $query->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS client_count");
+                }
+
+                return $query
                     ->whereBetween('created_at', [$start, $end])
                     ->groupBy('day')
                     ->orderBy('day')
@@ -54,13 +58,17 @@ class ChartService
             $data = Cache::remember("chart.new_invoices.{$start}_{$end}", 3600, function () use ($start, $end) {
                 $query = auth()->user()->invoices()->getQuery();
 
-                return $query
-                    // Komplett neuen SELECT definieren – nur DAY und COUNT
-                    ->selectRaw("
+                if (DB::getDriverName() === 'sqlite') {
+                    $query->selectRaw("strftime('%Y-%m-%d', invoices.created_at) as date, COUNT(invoices.id) AS invoice_count");
+                } else {
+                    $query
+                        ->selectRaw("
                     DATE_FORMAT(invoices.created_at, '%Y-%m-%d') AS day,
                     COUNT(invoices.id) AS invoice_count
-                ")
-                    ->whereBetween('invoices.created_at', [$start, $end])
+                ");
+                }
+
+                return $query->whereBetween('invoices.created_at', [$start, $end])
                     ->groupBy('day')
                     ->orderBy('day')
                     ->get();
@@ -91,12 +99,23 @@ class ChartService
             $data = Cache::remember("chart.time_worked.{$start}_{$end}", 3600, function () use ($start, $end) {
                 $query = auth()->user()->time_entries()->getQuery();
 
-                return $query
-                    ->selectRaw("
+                if (DB::getDriverName() === 'sqlite') {
+                    $query
+                        ->selectRaw("
+                        strftime('%Y-%m-%d', time_entries.started_at) as day,
+                        COUNT(time_entries.id) AS time_worked_count,
+                        SUM(time_entries.duration_hours) AS total_duration_hours
+                    ");
+                } else {
+                    $query
+                        ->selectRaw("
                         DATE_FORMAT(time_entries.started_at, '%Y-%m-%d') AS day,
                         COUNT(time_entries.id) AS time_worked_count,
                         SUM(time_entries.duration_hours) AS total_duration_hours
-                    ")
+                    ");
+                }
+
+                return $query
                     ->whereDate('time_entries.started_at', '>=', $start)
                     ->whereDate('time_entries.ended_at', '<=', $end)
                     ->groupBy('day')
@@ -127,24 +146,35 @@ class ChartService
         $end = Carbon::now();
 
         $data = Cache::remember("chart.income_statistics.$user->id", 3600, function () use ($start, $end, $user) {
-            $query = $user->time_entries()->with('project')->getQuery();
+            $query = $user->time_entries()->with('project')->getQuery()
+                ->leftJoin('projects', 'time_entries.project_id', '=', 'projects.id');
 
-            $raw = $query
-                ->leftJoin('projects','time_entries.project_id','=','projects.id')
-                ->selectRaw("
+            if (DB::getDriverName() === 'sqlite') {
+                $query->selectRaw("
+                    strftime('%Y-%m-%d', time_entries.started_at) as day,
+                    COUNT(time_entries.id)                              AS time_worked_count,
+                    SUM(time_entries.duration_hours)                    AS total_duration_hours,
+                    SUM(time_entries.duration_hours / 60 * projects.hourly_rate) AS total_amount,
+                    SUM(time_entries.duration_hours / 60 * projects.hourly_rate) * 0.19 AS taxes
+                ");
+            } else {
+                $query->selectRaw("
                     DATE_FORMAT(time_entries.started_at, '%Y-%m-%d') AS day,
                     COUNT(time_entries.id)                              AS time_worked_count,
                     SUM(time_entries.duration_hours)                    AS total_duration_hours,
                     SUM(time_entries.duration_hours / 60 * projects.hourly_rate) AS total_amount,
                     SUM(time_entries.duration_hours / 60 * projects.hourly_rate) * 0.19 AS taxes
-                ")
+                ");
+            }
+
+            $raw = $query
                 ->whereDate('time_entries.started_at', '>=', $start)
                 ->whereDate('time_entries.started_at', '<=', $end)
                 ->groupBy('day')
                 ->orderBy('day')
                 ->get();
 
-                return $raw->keyBy('day');
+            return $raw->keyBy('day');
         });
 
         $period = CarbonPeriod::create($start, '1 day', $end);
@@ -152,13 +182,13 @@ class ChartService
         return collect($period)
             ->map(fn($dt) => [
                 'name' => $dt->format('d.m.Y'),
-                'uv'   => isset($data[$dt->format('Y-m-d')])
-                    ? (float) $data[$dt->format('Y-m-d')]->total_amount
+                'uv' => isset($data[$dt->format('Y-m-d')])
+                    ? (float)$data[$dt->format('Y-m-d')]->total_amount
                     : 0,
-                'pv'   => isset($data[$dt->format('Y-m-d')])
-                    ? (float) $data[$dt->format('Y-m-d')]->taxes
+                'pv' => isset($data[$dt->format('Y-m-d')])
+                    ? (float)$data[$dt->format('Y-m-d')]->taxes
                     : 0,
-                'amt'  => 2100,
+                'amt' => 2100,
             ])
             ->values();
     }
