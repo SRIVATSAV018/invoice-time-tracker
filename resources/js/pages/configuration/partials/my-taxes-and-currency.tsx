@@ -26,10 +26,10 @@ export default function MyTaxesAndCurrency({ className }: { className: string })
     const { currencies, auth } = usePage<Props>().props;
 
     const { data, setData, processing, errors, recentlySuccessful, post, isDirty, clearErrors } = useForm<Required<Form>>({
-        currency: auth.user?.settings.currency,
-        subject_to_sales_tax: auth.user?.settings.subject_to_sales_tax,
-        sales_tax: auth.user?.settings.sales_tax,
-        tax_number: auth.user?.settings.tax_number
+        currency: auth.user?.settings?.currency,
+        subject_to_sales_tax: auth.user?.settings?.subject_to_sales_tax,
+        sales_tax: auth.user?.settings?.sales_tax,
+        tax_number: auth.user?.settings?.tax_number
     });
 
     const submit: FormEventHandler = (e) => {

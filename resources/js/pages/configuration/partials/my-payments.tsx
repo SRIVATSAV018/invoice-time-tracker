@@ -17,7 +17,7 @@ export default function MyPayments({ className }: { className: string }) {
     const { auth } = usePage<SharedData>().props;
 
     const { data, setData, processing, errors, recentlySuccessful, post, isDirty, clearErrors } = useForm<Required<Form>>({
-        payment_goal: auth.user.settings.payment_goal
+        payment_goal: auth.user?.settings?.payment_goal
     });
 
     const submit: FormEventHandler = (e) => {
